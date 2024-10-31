@@ -1,11 +1,11 @@
 ---
 # Config for usage
 paths:
-  samplesheet: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/BARCODE_module/test_samplesheet_wg_minION_v2"
-  baseout: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/BARCODE_module"
+  samplesheet: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/ALL_workflow/samplesheet_ALL_workflow_test"
+  baseout: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/ALL_workflow"
   ref_genome: "/fast/burlo/fcrudele/resources/hgRef/GRCh38.p13/no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"
-  logdir: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/BARCODE_module/log"
-  benchmark: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/BARCODE_module/bench"
+  logdir: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/ALL_workflow/log"
+  benchmark: "/orfeo/cephfs/scratch/burlo/nardone/test_minION_v2/ALL_workflow/bench"
   dorado: "/orfeo/LTS/burlo/LT_storage/shared/tools/dorado-0.8.0-linux-x64/bin/dorado"
   wg_container: "/orfeo/LTS/burlo/LT_storage/nardone/software/ont_benchmark/duet.sif"
   mosdepth: "/orfeo/LTS/burlo/LT_storage/shared/tools/mosdepth"

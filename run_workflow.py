@@ -69,7 +69,12 @@ def run_cl(args):
     if not check_env():
         base_snakemake_dir=os.path.dirname((os.path.realpath(__file__)))
         env_file = os.path.join(base_snakemake_dir, "minION_workflow_v2.yaml")
-        subprocess.check_output(f"""conda env create -f {env_file}""")
+        try:
+            subprocess.check_output(f"""conda env create -f {env_file}""", shell = True, encoding = 'utf8', stderr=subprocess.STDOUT)
+            print("Snakemake v8 installation completed")
+        except subprocess.CalledProcessError as e:
+            exit_code = e.returncode
+            sys.exit(f"Something went wrong during the snakemake environment installation. Try to install it separately.\nExit code: {exit_code}")
     with open(config, 'r') as conf:
         c = load(conf, Loader=Loader)
     ss = c['paths']['samplesheet']
@@ -110,7 +115,12 @@ def run(args):
     if not check_env():
         base_snakemake_dir=os.path.dirname((os.path.realpath(__file__)))
         env_file = os.path.join(base_snakemake_dir, "minION_workflow_v2.yaml")
-        subprocess.check_output(f"""conda env create -f {env_file}""")
+        try:
+            subprocess.check_output(f"""conda env create -f {env_file}""", shell = True, encoding = 'utf8', stderr=subprocess.STDOUT)
+            print("Snakemake v8 installation completed")
+        except subprocess.CalledProcessError as e:
+            exit_code = e.returncode
+            sys.exit(f"Something went wrong during the snakemake environment installation. Try to install it separately.\nExit code: {exit_code}")
     with open(config, 'r') as conf:
         c = load(conf, Loader=Loader)
     ss = c['paths']['samplesheet']
