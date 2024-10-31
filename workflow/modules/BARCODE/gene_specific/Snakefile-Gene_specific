@@ -1,0 +1,52 @@
+# Snakefile for the mito workflow
+
+import os
+import pandas as pd
+from snakemake.exceptions import print_exception, WorkflowError
+from snakemake.utils import validate, min_version
+import glob
+import pysam
+
+samples_df = pd.read_csv(config["paths"]["samplesheet"], sep=" ", header=0, dtype='object').set_index("SAMPLE_ID", drop=False)
+BAR_df = samples_df.query("ANALYSIS == 'GS'")
+ALL_df = samples_df.query("ANALYSIS != 'WG'")
+to_basecall = list(ALL_df.RAW_DATA.unique())
+BASE_OUT=config["paths"]["baseout"]
+gs_samples = list(BAR_df.SAMPLE_ID.unique())
+kitname = config["kit-name"]
+
+localrules: all
+
+
+include_prefix="rules/"
+include:
+    include_prefix + "functions.py"
+include:
+    include_prefix + "gene_specific.smk"
+
+rule all:
+    input:
+        os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "reference", f"""{config["gene_specific"]["gene_name"]}_for_coverage.bed"""),
+        os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "reference", f"""{config["gene_specific"]["gene_name"]}_ref.fasta"""),
+        os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "reference", f"""{config["gene_specific"]["gene_name"]}_ref.fasta.fai"""),
+        os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "reference", f"""{config["gene_specific"]["gene_name"]}_mask.bed"""),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "1.UNALIGNED_DATA","{gsample}_unaligned.bam"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "2.ALIGNMENT","{gsample}.bam"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "2.ALIGNMENT","{gsample}.bam.bai"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "2.ALIGNMENT", "coverage", "{gsample}.mosdepth.token"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "3.VARIANT.CALLING", "{gsample}.vcf.gz"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "3.VARIANT.CALLING", "{gsample}.vcf.gz.tbi"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "3.VARIANT.CALLING", "{gsample}.vep_annotated.vcf.gz"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "3.VARIANT.CALLING", "{gsample}.variants.html"), gsample = gs_samples),
+        expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "3.VARIANT.CALLING", "{gsample}.vep_annotated.xlsx"), gsample = gs_samples)
+        #expand(os.path.join(BASE_OUT, f"""{config["gene_specific"]["gene_name"]}_analyses""", "{gsample}", "{gsample}.cleaning.token"), gsample = gs_samples)
+
+
+onsuccess:
+    print("The GS module finished without errors!")
+    
+onerror:
+    print("An error occurred in the GS workflow execution!!")
+    
+
+

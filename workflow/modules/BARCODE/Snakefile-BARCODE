@@ -1,0 +1,96 @@
+# Snakefile for the barcode workflow
+
+import os
+import pandas as pd
+from snakemake.exceptions import print_exception, WorkflowError
+from snakemake.utils import validate, min_version
+import glob
+import pysam
+
+samples_df = pd.read_csv(config["paths"]["samplesheet"], sep=" ", header=0, dtype='object').set_index("SAMPLE_ID", drop=False)
+BAR_df = samples_df.query("ANALYSIS != 'WG'")
+
+BASE_OUT=config["paths"]["baseout"]
+sample_names = list(BAR_df.SAMPLE_ID)
+to_basecall = list(BAR_df.RAW_DATA.unique())
+kitname = config["kit-name"]
+
+mito_samples = list(BAR_df.query("ANALYSIS == 'MT'").SAMPLE_ID.unique())
+gs_samples = list(BAR_df.query("ANALYSIS != 'MT'").SAMPLE_ID.unique())
+
+include_prefix="rules/"
+include:
+    include_prefix + "functions.py"
+
+include:
+    include_prefix + "basecall.smk"
+
+
+if len(mito_samples) > 0 and len(gs_samples) == 0:
+
+    print("Only mt analyses")
+
+    localrules: all
+
+    module Mito:
+        snakefile:
+            "mito/Snakefile-Mito"
+        config:
+            config
+    use rule * from Mito as Mito_*
+
+    rule all:
+        input:
+            expand(os.path.join(BASE_OUT, "demultiplex", "tmp_{index}", "tmp_{index}_demultiplex.token"), index = list(range(len(to_basecall)))),
+            #expand(os.path.join(BASE_OUT, "{subj}", "1.UNALIGNED_DATA", "{subj}_unaligned.bam"), subj = sample_names),
+            rules.Mito_all.input
+elif len(mito_samples) == 0 and len(gs_samples) > 0:
+
+    print("Only gs analyses")
+
+    localrules: all
+
+    module Gene_specific:
+        snakefile:
+            "gene_specific/Snakefile-Gene_specific"
+        config:
+            config
+    use rule * from Gene_specific as Gene_specific_*
+    
+    rule all:
+        input:
+            expand(os.path.join(BASE_OUT, "demultiplex", "tmp_{index}", "tmp_{index}_demultiplex.token"), index = list(range(len(to_basecall)))),
+            #expand(os.path.join(BASE_OUT, "{subj}", "1.UNALIGNED_DATA", "{subj}_unaligned.bam"), subj = sample_names),
+            rules.Gene_specific_all.input
+
+elif len(mito_samples) > 0 and len(gs_samples) > 0:
+
+    print("Both type of analyses")
+
+    module Mito:
+        snakefile:
+            "mito/Snakefile-Mito"
+        config:
+            config
+    use rule * from Mito as Mito_*
+
+    module Gene_specific:
+        snakefile:
+            "gene_specific/Snakefile-Gene_specific"
+        config:
+            config
+    use rule * from Gene_specific as Gene_specific_*
+
+    localrules: all
+
+    rule all:
+        input:
+            expand(os.path.join(BASE_OUT, "demultiplex", "tmp_{index}", "tmp_{index}_demultiplex.token"), index = list(range(len(to_basecall)))),
+            #expand(os.path.join(BASE_OUT, "{subj}", "1.UNALIGNED_DATA", "{subj}_unaligned.bam"), subj = sample_names),
+            rules.Gene_specific_all.input,
+            rules.Mito_all.input
+        default_target: True
+
+else:
+    print("Samples not found. Please, provide a correctly formatted samplesheet")
+    exit(1)

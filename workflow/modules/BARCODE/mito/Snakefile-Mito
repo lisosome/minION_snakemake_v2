@@ -1,0 +1,49 @@
+# Snakefile for the mito workflow
+
+import os
+import pandas as pd
+from snakemake.exceptions import print_exception, WorkflowError
+from snakemake.utils import validate, min_version
+import glob
+import pysam
+
+samples_df = pd.read_csv(config["paths"]["samplesheet"], sep=" ", header=0, dtype='object').set_index("SAMPLE_ID", drop=False)
+BAR_df = samples_df.query("ANALYSIS == 'MT'")
+ALL_df = samples_df.query("ANALYSIS != 'WG'")
+to_basecall = list(ALL_df.RAW_DATA.unique())
+BASE_OUT=config["paths"]["baseout"]
+mito_samples = list(BAR_df.SAMPLE_ID.unique())
+kitname = config["kit-name"]
+
+
+localrules: all
+
+
+include_prefix="rules/"
+include:
+    include_prefix + "functions.py"
+include:
+    include_prefix + "mito_workflow.smk"
+
+rule all:
+    input:
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "1.UNALIGNED_DATA","{sample}_unaligned.bam"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "2.ALIGNMENT","{sample}.bam"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "2.ALIGNMENT","{sample}.bam.bai"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "2.ALIGNMENT", "coverage", "{sample}.mosdepth.global.dist.txt"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "2.ALIGNMENT", "coverage", "{sample}.mosdepth.summary.txt"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "3.VARIANT.CALLING", "annotation", "{sample}.mtDNA.variants.annotated.txt"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "3.VARIANT.CALLING", "vcf_merge", "{sample}.filt.SNPs.INDELs.vcf.gz"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "3.VARIANT.CALLING", "vcf_merge", "{sample}.filt.SNPs.INDELs.vcf.gz.tbi"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "3.VARIANT.CALLING", "vep", "{sample}.vep_annotated.vcf.gz"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "3.VARIANT.CALLING", "vep", "{sample}.variants.html"), sample = mito_samples),
+        expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "3.VARIANT.CALLING", "{sample}.mtDNA.complete_annotation.xlsx"), sample = mito_samples),
+        #expand(os.path.join(BASE_OUT, "MT_analyses", "{sample}", "{sample}.cleaning.token"), sample = mito_samples)
+
+
+onsuccess:
+    print("The MT module finished without errors!")
+        
+onerror:
+    print("An error occurred in the MT workflow execution!!")
+    

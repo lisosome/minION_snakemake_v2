@@ -1,0 +1,46 @@
+# Snakefile for the whole genome workflow
+
+import os
+import pandas as pd
+from snakemake.exceptions import print_exception, WorkflowError
+from snakemake.utils import validate, min_version
+
+samples_df = pd.read_csv(config["paths"]["samplesheet"], sep=" ", header=0, dtype='object').set_index("SAMPLE_ID", drop=False)
+WG_df = samples_df.query("ANALYSIS == 'WG'")
+
+include_prefix="rules/"
+
+sample_names = list(WG_df.SAMPLE_ID)
+BASE_OUT=config["paths"]["baseout"]
+
+#singularity: config["paths"]["wg_container"]
+# Scatter per le batches di basecalling
+
+scattergather:
+    split=config["scatter"]["scatter_number"]
+
+
+include:
+    include_prefix + "functions.py"
+include:
+    include_prefix + "basecall.smk"
+include:
+    include_prefix + "variant_calling.smk"
+
+
+localrules: all
+
+rule all:
+    input:
+        expand(os.path.join(BASE_OUT, "WG_analyses", "{sample}", "2.ALIGNMENT", "{sample}.bam"), sample = sample_names),
+        expand(os.path.join(BASE_OUT, "WG_analyses", "{sample}", "2.ALIGNMENT", "{sample}.bam.bai"), sample = sample_names),
+        expand(os.path.join(BASE_OUT, "WG_analyses", "{sample}", "2.ALIGNMENT", "coverage", "{sample}.mosdepth.global.dist.txt"), sample = sample_names),
+        expand(os.path.join(BASE_OUT, "WG_analyses", "{sample}", "2.ALIGNMENT", "coverage", "{sample}.mosdepth.summary.txt"), sample = sample_names),
+        expand(os.path.join(BASE_OUT, "WG_analyses", "{sample}", "3.VARIANT.CALLING", "{sample}_all_calls.vcf.gz"), sample = sample_names),
+        expand(os.path.join(BASE_OUT, "WG_analyses", "{sample}", "3.VARIANT.CALLING", "{sample}_all_calls.vcf.gz.tbi"), sample = sample_names)
+
+onsuccess:
+    print("The WG module finished without errors!")
+
+onerror:
+    print("An error occurred in the WG workflow execution!!")

@@ -1,0 +1,63 @@
+---
+snakefile: Snakefile-Mito
+executor: slurm
+latency-wait: 60
+show-failed-logs: True
+keep-going: True
+printshellcmds: True
+# Cluster submission
+jobname: "{rule}.{jobid}"
+max-jobs-per-second: 3        
+max-status-checks-per-second: 3
+jobs: 16
+use-singularity: True 
+singularity-args: "-B /fast -B /orfeo"
+retries: 3
+rerun-incomplete: True
+
+# Job resources
+default-resources:
+  slurm_account: "burlo"
+
+#set-resources:
+#  finding_pod:
+#    runtime: 8640
+#    mem_mb_per_cpu: 5000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 1
+#  preparing_batches:
+#    runtime: 8640
+#    mem_mb_per_cpu: 5000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 1
+#  linking:
+#    runtime: 8640
+#    mem_mb_per_cpu: 5000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 1
+#  basecalling:
+#    runtime: 18:00:00
+#    mem_mb_per_cpu: 5000
+#    slurm_partition: "GPU"
+#    cpus_per_task: 15
+#    slurm_extra: "--gpus=1"
+#  bam_merging:
+#    runtime: 8640
+#    mem_mb_per_cpu: 25000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 5
+#  coverage:
+#    runtime: 8640
+#    mem_mb_per_cpu: 25000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 4
+#  duet:
+#    runtime: 8640
+#    mem_mb_per_cpu: 20000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 8
+#  all_calls:
+#    runtime: 8640
+#    mem_mb_per_cpu: 20000
+#    slurm_partition: "THIN"
+#    cpus_per_task: 8

@@ -1,0 +1,81 @@
+# Snakemake minION workflow v2 - snakemake file
+
+# There will be several implementations compared to the old workflow
+# We will use Snakemake v8 for a better integration of the SLURM queue manager
+# Dorado will be used instead of guppy
+# Whole Genome (WG), mithocondrial (MT) and gene-specific (GS) analyses will be implemented. The last is to perform analyses for STRC, but it's better to remain general
+# Everything will be run using a Docker image for portability (This was the original idea, but it failed miserably :( )
+
+import os
+import pandas as pd
+from snakemake.exceptions import print_exception, WorkflowError
+from snakemake.utils import validate, min_version
+
+# Samples will be specified using a samplesheet. The location of the samplesheet will be specified in the config
+# Samplesheet will be space-separated and expect four columns:
+#   1) DNA-code
+#   2) raw_data path
+#   3) analysis type (WG, MT, GS)
+#   4) barcode: only for MT and GS. For WG, just put NA
+# The header will have the following column names: SAMPLE_ID, RAW_DATA, ANALYSIS, BARCODE
+
+samples_df = pd.read_csv(config["paths"]["samplesheet"], sep=" ", header=0, dtype='object').set_index("SAMPLE_ID", drop=False)
+WG_df = samples_df.query("ANALYSIS == 'WG'")
+barcodes = samples_df.query("ANALYSIS != 'WG'")
+
+if len(WG_df) > 0 and len(barcodes) > 0:
+    module BARCODE:
+        snakefile:
+            "modules/BARCODE/Snakefile-BARCODE"
+        config:
+            config
+    use rule * from BARCODE as BARCODE_*
+
+    module WG:
+        snakefile:
+            "modules/WG/Snakefile-WG"
+        config:
+            config
+    use rule * from WG as WG_*
+
+    localrules: all
+
+    rule all:
+        input:
+            rules.BARCODE_all.input,
+            rules.WG_all.input
+        default_target: True
+
+elif len(WG_df) > 0 and len(barcodes) == 0:
+    module WG:
+        snakefile:
+            "modules/WG/Snakefile-WG"
+        config:
+            config
+    use rule * from WG as WG_*
+
+    localrules: all
+
+    rule all:
+        input:
+            rules.WG_all.input
+
+elif len(WG_df) == 0 and len(barcodes) > 0:
+    module BARCODE:
+        snakefile:
+            "modules/BARCODE/Snakefile-BARCODE"
+        config:
+            config
+    use rule * from BARCODE as BARCODE_*
+
+    localrules: all
+
+    rule all:
+        input:
+            rules.BARCODE_all.input
+
+else:
+    print("WARNING: No analyses to perform detected. Please, check that the samplesheet is correctly formatted")
+
+
+
