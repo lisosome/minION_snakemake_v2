@@ -11,7 +11,7 @@ max-jobs-per-second: 3
 max-status-checks-per-second: 3
 jobs: 16
 use-singularity: True 
-singularity-args: "-B /fast -B /orfeo"
+singularity-args: "-B /orfeo"
 retries: 3
 rerun-incomplete: True
 

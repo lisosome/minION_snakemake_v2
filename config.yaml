@@ -1,0 +1,34 @@
+---
+# Config for usage
+paths:
+  samplesheet: "/orfeo/cephfs/scratch/burlo/nardone/minION_271114/pipeline_resources/samplesheet_24-1206.tsv"
+  baseout: "/orfeo/cephfs/scratch/burlo/nardone/minION_271114/analyses"
+  ref_genome: "/orfeo/LTS/burlo/LT_storage/shared/resources/hgRef/GRCh38.p13/no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"
+  logdir: "/orfeo/cephfs/scratch/burlo/nardone/minION_271114/Log"
+  benchmark: "/orfeo/cephfs/scratch/burlo/nardone/minION_271114/analyses/bench"
+  dorado: "/orfeo/LTS/burlo/LT_storage/shared/tools/dorado-0.8.0-linux-x64/bin/dorado"
+  wg_container: "/orfeo/LTS/burlo/LT_storage/nardone/software/ont_benchmark/duet.sif"
+  mosdepth: "/orfeo/LTS/burlo/LT_storage/shared/tools/mosdepth"
+  mito_resources:
+    ref_mutserve: "/orfeo/LTS/burlo/LT_storage/shared/resources/mtDNA_resources/rcrs_mutserve.fasta"
+    ref_mutect: "/orfeo/LTS/burlo/LT_storage/shared/resources/mtDNA_resources/mt_contigs.fasta"
+    sing_image: "/orfeo/LTS/burlo/LT_storage/shared/resources/mtDNA_resources/singularity/quay.io-genepi-mtdna-server-2-v2.1.6.img"
+    annotation: "/orfeo/LTS/burlo/LT_storage/shared/resources/mtDNA_resources/rCRS_annotation.txt"
+scatter:
+  scatter_number: 8
+kit-name: "SQK-NBD114-24"
+
+gene_specific:
+  coordinates: "chr15:43599563-43618800"
+  gene_name: "STRC"
+  clair3_model: "/orfeo/LTS/burlo/LT_storage/shared/resources/clair3_model/r1041_e82_400bps_sup_v500"
+  clair3_img: "docker://hkubal/clair3:latest"
+
+vep:
+  cache: "/orfeo/LTS/burlo/LT_storage/shared/resources/vep/indexed_cache"
+  plugin_dir: "/orfeo/LTS/burlo/LT_storage/shared/tools/vep_plugins"
+  cadd:
+    snv: "/orfeo/LTS/burlo/LT_storage/shared/resources/plugins_resources/CADD/whole_genome_SNVs.tsv.gz"
+    indel: "/orfeo/LTS/burlo/LT_storage/shared/resources/plugins_resources/CADD/gnomad.genomes.r4.0.indel.tsv.gz"
+  gnomAD_mito: "/orfeo/LTS/burlo/LT_storage/shared/resources/plugins_resources/gnomAD/gnomad.genomes.v3.1.sites.chrM.vcf.bgz"
+  dbNSFP_dir: "/fast/burlo/fcrudele/resources/dbNSFP/v4.3"
